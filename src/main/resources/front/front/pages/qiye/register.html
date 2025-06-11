@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册</title>
+    <link rel="stylesheet" type="text/css" href="../../layui/css/layui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            background: url('../../assets/images/haokan.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        .register-form {
+            background: white;
+            padding: 32px 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            width: 440px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .system-name {
+            text-align: center;
+            margin-bottom: 4px;
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .register-desc {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-label {
+            min-width: 70px;
+            margin-bottom: 0;
+            margin-right: 12px;
+            color: #333;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #000;
+            outline: none;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #999;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-register:hover {
+            background: linear-gradient(45deg, #357ABD, #4A90E2);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .login-link {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #4A90E2;
+            text-decoration: none;
+            margin-left: 4px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #357ABD;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <form class="register-form layui-form">
+        <div class="system-name">图书管理系统</div>
+        <p class="register-desc">创建新账户</p>
+
+        <div class="form-group">
+            <label class="form-label">企业账号</label>
+            <div class="form-input-wrapper">
+                <img src="../../assets/icons/user.svg" class="input-icon" alt="">
+                <input type="text" name="qiyezhanghao" required lay-verify="required"
+                       placeholder="请输入企业账号" autocomplete="off"
+                       class="form-input layui-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">密码</label>
+            <div class="form-input-wrapper">
+                <img src="../../assets/icons/password.svg" class="input-icon" alt="">
+                <input type="password" name="mima" required lay-verify="required"
+                       placeholder="请输入密码" autocomplete="off"
+                       class="form-input layui-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">企业名称</label>
+            <div class="form-input-wrapper">
+                <img src="../../assets/icons/user.svg" class="input-icon" alt="">
+                <input type="text" name="qiyemingcheng" required lay-verify="required"
+                       placeholder="请输入企业名称" autocomplete="off"
+                       class="form-input layui-input">
+            </div>
+        </div>
+
+
+
+        <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <div class="form-input-wrapper">
+                <img src="../../assets/icons/phone.svg" class="input-icon" alt="">
+                <input type="text" name="lianxidianhua" required lay-verify="required"
+                       placeholder="请输入联系电话" autocomplete="off"
+                       class="form-input layui-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">邮箱</label>
+            <div class="form-input-wrapper">
+                <img src="../../assets/icons/email.svg" class="input-icon" alt="">
+                <input type="text" name="youxiang" required lay-verify="required"
+                       placeholder="请输入邮箱" autocomplete="off"
+                       class="form-input layui-input">
+            </div>
+        </div>
+
+
+        <button class="btn-register" lay-submit lay-filter="register">注册</button>
+
+        <div class="login-link">
+            <span>已有账户？</span>
+            <a href="../login/login.html">登录</a>
+        </div>
+    </form>
+</div>
+
+<script src="../../layui/layui.js"></script>
+<script src="../../js/vue.js"></script>
+<script src="../../js/config.js"></script>
+<script src="../../modules/config.js"></script>
+<script src="../../js/utils.js"></script>
+<script src="../../js/validate.js"></script>
+
+<script>
+    var vue = new Vue({
+        el: '.container',
+        data: {},
+        methods: {}
+    });
+
+    layui.use(['layer', 'element', 'carousel', 'form', 'http', 'jquery'], function () {
+        var layer = layui.layer;
+        var element = layui.element;
+        var carousel = layui.carousel;
+        var form = layui.form;
+        var http = layui.http;
+        var jquery = layui.jquery;
+
+        var tablename = http.getParam('tablename');
+
+        // 注册
+        form.on('submit(register)', function (data) {
+            data = data.field;
+            if (!data.qiyezhanghao) {
+                layer.msg('企业账号不能为空', {
+                    time: 2000,
+                    icon: 5
+                });
+                return false
+            }
+            if (!data.mima) {
+                layer.msg('密码不能为空', {
+                    time: 2000,
+                    icon: 5
+                });
+                return false
+            }
+            if (!data.qiyemingcheng) {
+                layer.msg('企业名称不能为空', {
+                    time: 2000,
+                    icon: 5
+                });
+                return false
+            }
+            if (!isMobile(data.lianxidianhua)) {
+                layer.msg('联系电话应输入手机格式', {
+                    time: 2000,
+                    icon: 5
+                });
+                return false
+            }
+            http.requestJson(tablename + '/register', 'post', data, function (res) {
+                layer.msg('注册成功', {
+                    time: 2000,
+                    icon: 6
+                }, function () {
+                    // 路径访问设置
+                    window.location.href = '../login/login.html';
+                });
+            });
+            return false
+        });
+    });
+</script>
+</body>
+</html>
