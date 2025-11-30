@@ -148,26 +148,28 @@ public class AuthService {
         queryWrapper.eq(UserAccountEntity::getEmail, request.getEmail());
         UserAccountEntity existingUser = userAccountMapper.selectOne(queryWrapper);
 
+        Long userId;
         if (existingUser != null) {
-            throw new RuntimeException("用户已存在");
+            userId =  existingUser.getUserId();
+        }
+        else {
+            // 生成salt和密码hash
+            String salt = UUID.randomUUID().toString();
+            String passwordHash = passwordUtil.hashPassword(request.getPassword(), salt);
+
+            // 创建用户账户
+            UserAccountEntity user = new UserAccountEntity();
+            user.setEmail(request.getEmail());
+            user.setPasswordHash(passwordHash);
+            user.setSalt(salt);
+            user.setIsActive(true);
+            user.setLoginAttempts(0);
+            user.setCreatedAt(Instant.now());
+            user.setUpdatedAt(Instant.now());
+            userAccountMapper.insert(user);
+            userId = user.getUserId();
         }
 
-        // 生成salt和密码hash
-        String salt = UUID.randomUUID().toString();
-        String passwordHash = passwordUtil.hashPassword(request.getPassword(), salt);
-
-        // 创建用户账户
-        UserAccountEntity user = new UserAccountEntity();
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordHash);
-        user.setSalt(salt);
-        user.setIsActive(true);
-        user.setLoginAttempts(0);
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
-        userAccountMapper.insert(user);
-
-        Long userId = user.getUserId();
         Long roleId;
 
         // 根据用户类型创建对应的记录
