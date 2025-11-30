@@ -38,12 +38,10 @@ public class AuthService {
     private final PasswordUtil passwordUtil;
     private final JwtUtil jwtUtil;
     private final JavaMailSender mailSender;
-    
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
     // 临时存储验证码（实际应该使用 Redis）
     private final ConcurrentHashMap<String, VerificationCodeEntity> codeStorage = new ConcurrentHashMap<>();
+    @Value("${spring.mail.username}")
+    private String fromEmail;
 
     /**
      * 发送验证码
@@ -135,10 +133,16 @@ public class AuthService {
     }
 
     /**
-     * 用户注册（仅创建user_accounts）
+     * 注册个人/招聘者
      */
     @Transactional
-    public AuthDTO.RegisterResponse userRegister(AuthDTO.RegisterRequest request) {
+    public AuthDTO.RegisterResponse register(AuthDTO.RegisterRequest request) {
+        // 验证token
+        VerificationCodeEntity verificationCode = codeStorage.get(request.getVerificationToken());
+        if (verificationCode == null || !verificationCode.getEmail().equals(request.getEmail())) {
+            throw new RuntimeException("验证token无效");
+        }
+
         // 检查用户是否已存在
         LambdaQueryWrapper<UserAccountEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(UserAccountEntity::getEmail, request.getEmail());
@@ -162,45 +166,6 @@ public class AuthService {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         userAccountMapper.insert(user);
-
-        AuthDTO.RegisterResponse response = new AuthDTO.RegisterResponse();
-        response.setUserId(user.getUserId());
-        response.setEmail(user.getEmail());
-        return response;
-    }
-
-    /**
-     * 注册个人/招聘者
-     */
-    @Transactional
-    public AuthDTO.RegisterResponse register(AuthDTO.RegisterRequest request) {
-        // 验证token
-        VerificationCodeEntity verificationCode = codeStorage.get(request.getVerificationToken());
-        if (verificationCode == null || !verificationCode.getEmail().equals(request.getEmail())) {
-            throw new RuntimeException("验证token无效");
-        }
-
-        // 检查用户是否已存在
-        LambdaQueryWrapper<UserAccountEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(UserAccountEntity::getEmail, request.getEmail());
-        UserAccountEntity user = userAccountMapper.selectOne(queryWrapper);
-
-        if (user == null) {
-            // 生成salt和密码hash
-            String salt = UUID.randomUUID().toString();
-            String passwordHash = passwordUtil.hashPassword(request.getPassword(), salt);
-
-            // 创建用户账户
-            user = new UserAccountEntity();
-            user.setEmail(request.getEmail());
-            user.setPasswordHash(passwordHash);
-            user.setSalt(salt);
-            user.setIsActive(true);
-            user.setLoginAttempts(0);
-            user.setCreatedAt(Instant.now());
-            user.setUpdatedAt(Instant.now());
-            userAccountMapper.insert(user);
-        }
 
         Long userId = user.getUserId();
         Long roleId;

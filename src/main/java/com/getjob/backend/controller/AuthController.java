@@ -44,16 +44,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/user/register")
-    public ApiResponse<AuthDTO.RegisterResponse> userRegister(@RequestBody AuthDTO.RegisterRequest request) {
-        try {
-            AuthDTO.RegisterResponse response = authService.userRegister(request);
-            return ApiResponse.success("注册成功", response);
-        } catch (Exception e) {
-            return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), e.getMessage());
-        }
-    }
-
     @PostMapping("/register")
     public ApiResponse<AuthDTO.RegisterResponse> register(@RequestBody AuthDTO.RegisterRequest request) {
         try {
