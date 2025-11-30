@@ -1,52 +1,33 @@
 package com.getjob.backend.model;
 
-import jakarta.persistence.*;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-@Entity
+import java.time.Instant;
+
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(callSuper = true)
-@Table(name = "talents")
 @NoArgsConstructor
+@TableName("talents")
 public class TalentEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "talent_id")
+    @TableId(type = IdType.AUTO, value = "talent_id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clerk_user_id", nullable = false)
-    private ClerkUserEntity clerkUserEntity;
+    private Long userId;
 
-    @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Column(name = "avatar")
     private String avatar;
 
-    @Column(name = "location", length = 255)
     private String location;
 
-    @Column(name = "vote")
     private Double vote;
 
-    @OneToMany(mappedBy = "talentEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TalentLinkEntity> links = new ArrayList<>();
+    private Boolean isActive;
 
-    @OneToOne(mappedBy = "talentEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private ResumeEntity resumeEntity = new ResumeEntity();
+    private Instant createdAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
 }

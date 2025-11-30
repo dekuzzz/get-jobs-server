@@ -1,31 +1,21 @@
 package com.getjob.backend.model;
 
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-@Entity
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(callSuper = true)
-@Table(name = "job_content")
 @NoArgsConstructor
+@TableName("job_content")
 public class JobContentEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "job_content_id")
+    @TableId(type = IdType.AUTO)
     private Long jobContentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
-    private JobEntity jobEntity;
+    private Long jobId;
 
-    @Column(name = "language_code", length = 2, nullable = false)
     private String languageCode;
 
-    @Column(name = "content_text", nullable = false)
     private String contentText;
-
 }

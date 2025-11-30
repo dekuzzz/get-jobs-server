@@ -1,16 +1,22 @@
 package com.getjob.backend.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.getjob.backend.mapper.ResumeMapper;
+import com.getjob.backend.mapper.ResumeSkillMapper;
 import com.getjob.backend.model.ResumeEntity;
+import com.getjob.backend.model.ResumeSkillEntity;
 import com.getjob.backend.model.TalentEntity;
 import com.getjob.backend.model.dto.TalentListResponse;
 import com.getjob.backend.service.TalentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,42 +25,38 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class TalentController {
 
     private final TalentService talentService;
-
-    public TalentController(TalentService talentService) {
-        this.talentService = talentService;
-    }
+    private final ResumeMapper resumeMapper;
+    private final ResumeSkillMapper resumeSkillMapper;
 
     @GetMapping("/talents")
     public ResponseEntity<TalentListResponse> getTalents(
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "8") int pageSize,
-            @RequestParam(required = true) String language,
+            @RequestParam String language,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String officeMode,
             @RequestParam(required = false) String workType,
-            @RequestParam(required = false) Integer salaryMin,
-            @RequestParam(required = false) Integer salaryMax) {
-
-        // Create pageable with sorting (optional - you can adjust the default sort)
-        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.DESC, "postedDate"));
+            @RequestParam(required = false) BigDecimal salaryMin,
+            @RequestParam(required = false) BigDecimal salaryMax) {
 
         // Call service to get filtered talents
         Page<TalentEntity> talentPage = talentService.findTalents(
-                keyword, officeMode, workType, salaryMin, salaryMax, pageable);
+                keyword, officeMode, workType, salaryMin, salaryMax, page, pageSize);
 
         // Convert entities to DTOs
-        List<TalentListResponse.Talent> talentDTOs = talentPage.getContent().stream()
+        List<TalentListResponse.Talent> talentDTOs = talentPage.getRecords().stream()
                 .map(talentEntity -> convertToDTO(talentEntity, language))
                 .collect(Collectors.toList());
 
         // Build pagination info
         TalentListResponse.Pagination pagination = new TalentListResponse.Pagination(
                 page,
-                talentPage.getTotalPages(),
-                (int) talentPage.getTotalElements(),
+                (int) talentPage.getPages(),
+                (int) talentPage.getTotal(),
                 pageSize);
 
         // Build response
@@ -74,38 +76,44 @@ public class TalentController {
         recruiter.setAvatar(entity.getAvatar());
         dto.setRecruiter(recruiter);
 
-        ResumeEntity resumeEntity = entity.getResumeEntity();
-        dto.setTitle(resumeEntity.getTitle());
-        List<String> tags = new ArrayList<>();
-        tags.add(resumeEntity.getOfficeMode());
-        tags.add(resumeEntity.getWorkNature());
-        dto.setTags(tags);
+        ResumeEntity resumeEntity = resumeMapper.selectOne(
+                new LambdaQueryWrapper<ResumeEntity>()
+                        .eq(ResumeEntity::getTalentId, entity.getId())
+        );
 
-        List<String> skills = new ArrayList<>();
-        for (var skill : resumeEntity.getSkills()) {
-            if (skill != null && skill.getLanguageCode().equals(language)) {
-                skills.add(skill.getSkillName());
+        if (resumeEntity != null) {
+            dto.setTitle(resumeEntity.getTitle());
+            List<String> tags = new ArrayList<>();
+            if (resumeEntity.getOfficeMode() != null) {
+                tags.add(resumeEntity.getOfficeMode());
             }
+            if (resumeEntity.getWorkNature() != null) {
+                tags.add(resumeEntity.getWorkNature());
+            }
+            dto.setTags(tags);
+
+            List<ResumeSkillEntity> skills = resumeSkillMapper.selectList(
+                    new LambdaQueryWrapper<ResumeSkillEntity>()
+                            .eq(ResumeSkillEntity::getResumeId, resumeEntity.getResumeId())
+                            .eq(ResumeSkillEntity::getLanguageCode, language)
+            );
+            dto.setSkills(skills.stream().map(ResumeSkillEntity::getSkillName).collect(Collectors.toList()));
+            dto.setSalary(formatSalary(resumeEntity.getCurrencyCode(), resumeEntity.getMinSalary(), resumeEntity.getMaxSalary(), resumeEntity.getSettlement()));
+            dto.setPosted(formatPostedTime(resumeEntity.getUpdatedAt()));
         }
-        dto.setSkills(skills);
-        dto.setSalary(formatSalary(resumeEntity.getCurrencyCode(), resumeEntity.getMinSalary(), resumeEntity.getMaxSalary(), resumeEntity.getSettlement()));
-        dto.setPosted(formatPostedTime(resumeEntity.getUpdatedAt()));
 
         return dto;
     }
 
-    private String formatSalary(String currency, Double min, Double max, String period) {
+    private String formatSalary(String currency, BigDecimal min, BigDecimal max, String period) {
         // 默认值处理
         currency = currency != null ? currency.trim() : "";
         period = period != null ? period.trim() : "";
-        min = min != null ? min : 0;
-        max = max != null ? max : 0;
-
-        // 判断是否需要显示小数位
-        boolean showDecimals = (min % 1 != 0) || (max % 1 != 0);
+        min = min != null ? min : BigDecimal.ZERO;
+        max = max != null ? max : BigDecimal.ZERO;
 
         // 根据是否需要小数选择不同格式
-        String formatPattern = showDecimals ? "%,.2f" : "%,.0f";
+        String formatPattern = "%,.2f";
 
         return String.format("%s%s-%s per %s",
                 currency,
