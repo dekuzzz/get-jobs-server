@@ -24,6 +24,7 @@ CREATE TABLE user_accounts (
                                email VARCHAR(255) UNIQUE NOT NULL,
                                password_hash VARCHAR(255) NOT NULL,
                                salt VARCHAR(100) NOT NULL,
+                               role VARCHAR(20) CHECK (role IN ('job_seeker', 'recruiters')) DEFAULT 'job_seeker',
                                is_active BOOLEAN NOT NULL DEFAULT TRUE,
                                last_login_at TIMESTAMPTZ,
                                login_attempts INTEGER DEFAULT 0,

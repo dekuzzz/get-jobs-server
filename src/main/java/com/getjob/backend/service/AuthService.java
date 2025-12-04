@@ -137,10 +137,21 @@ public class AuthService {
      */
     @Transactional
     public AuthDTO.RegisterResponse register(AuthDTO.RegisterRequest request) {
+        // 参数验证
+        if (request == null) {
+            throw new RuntimeException("请求参数不能为空");
+        }
+        if (request.getVerificationToken() == null || request.getVerificationToken().trim().isEmpty()) {
+            throw new RuntimeException("验证token不能为空");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("邮箱不能为空");
+        }
+        
         // 验证token
         VerificationCodeEntity verificationCode = codeStorage.get(request.getVerificationToken());
         if (verificationCode == null || !verificationCode.getEmail().equals(request.getEmail())) {
-            throw new RuntimeException("验证token无效");
+            throw new RuntimeException("验证token无效或已过期，请重新验证验证码");
         }
 
         // 检查用户是否已存在
@@ -162,6 +173,7 @@ public class AuthService {
             user.setEmail(request.getEmail());
             user.setPasswordHash(passwordHash);
             user.setSalt(salt);
+            user.setRole(request.getUserType()); // 设置用户角色
             user.setIsActive(true);
             user.setLoginAttempts(0);
             user.setCreatedAt(Instant.now());
@@ -217,6 +229,7 @@ public class AuthService {
         response.setEmail(request.getEmail());
         response.setUserType(request.getUserType());
         response.setName(request.getName());
+        response.setRole(request.getUserType()); // 设置角色
 
         // 设置对应的 ID
         if ("recruiters".equalsIgnoreCase(request.getUserType())) {
@@ -269,26 +282,51 @@ public class AuthService {
         user.setUpdatedAt(Instant.now());
         userAccountMapper.updateById(user);
 
-        // 查询用户类型
-        String userType = "user";
+        // 获取用户角色（优先使用数据库中的role字段，如果没有则从talents/recruiters表查询）
+        String userType = user.getRole();
         String userName = user.getEmail();
 
-        // 检查是求职者还是招聘者
-        LambdaQueryWrapper<TalentEntity> talentWrapper = new LambdaQueryWrapper<>();
-        talentWrapper.eq(TalentEntity::getUserId, user.getUserId());
-        TalentEntity talent = talentMapper.selectOne(talentWrapper);
+        if (userType == null || userType.isEmpty()) {
+            // 兼容旧数据：检查是求职者还是招聘者
+            LambdaQueryWrapper<TalentEntity> talentWrapper = new LambdaQueryWrapper<>();
+            talentWrapper.eq(TalentEntity::getUserId, user.getUserId());
+            TalentEntity talent = talentMapper.selectOne(talentWrapper);
 
-        if (talent != null) {
-            userType = "job_seeker";
-            userName = talent.getFullName();
+            if (talent != null) {
+                userType = "job_seeker";
+                userName = talent.getFullName();
+                // 更新数据库中的role字段
+                user.setRole(userType);
+                userAccountMapper.updateById(user);
+            } else {
+                LambdaQueryWrapper<RecruiterEntity> recruiterWrapper = new LambdaQueryWrapper<>();
+                recruiterWrapper.eq(RecruiterEntity::getUserId, user.getUserId());
+                RecruiterEntity recruiter = recruiterMapper.selectOne(recruiterWrapper);
+
+                if (recruiter != null) {
+                    userType = "recruiters";
+                    userName = recruiter.getFullName();
+                    // 更新数据库中的role字段
+                    user.setRole(userType);
+                    userAccountMapper.updateById(user);
+                }
+            }
         } else {
-            LambdaQueryWrapper<RecruiterEntity> recruiterWrapper = new LambdaQueryWrapper<>();
-            recruiterWrapper.eq(RecruiterEntity::getUserId, user.getUserId());
-            RecruiterEntity recruiter = recruiterMapper.selectOne(recruiterWrapper);
-
-            if (recruiter != null) {
-                userType = "recruiters";
-                userName = recruiter.getFullName();
+            // 根据role获取对应的名称
+            if ("job_seeker".equals(userType)) {
+                LambdaQueryWrapper<TalentEntity> talentWrapper = new LambdaQueryWrapper<>();
+                talentWrapper.eq(TalentEntity::getUserId, user.getUserId());
+                TalentEntity talent = talentMapper.selectOne(talentWrapper);
+                if (talent != null) {
+                    userName = talent.getFullName();
+                }
+            } else if ("recruiters".equals(userType)) {
+                LambdaQueryWrapper<RecruiterEntity> recruiterWrapper = new LambdaQueryWrapper<>();
+                recruiterWrapper.eq(RecruiterEntity::getUserId, user.getUserId());
+                RecruiterEntity recruiter = recruiterMapper.selectOne(recruiterWrapper);
+                if (recruiter != null) {
+                    userName = recruiter.getFullName();
+                }
             }
         }
 
@@ -306,6 +344,7 @@ public class AuthService {
         userInfo.setEmail(user.getEmail());
         userInfo.setUserType(userType);
         userInfo.setName(userName);
+        userInfo.setRole(userType); // 设置角色
         response.setUserInfo(userInfo);
 
         return response;

@@ -46,7 +46,7 @@ echo ""
 echo "=================================="
 echo "构建完成！"
 echo "=================================="
-echo "后端JAR: $DEPLOY_DIR/backend/part-time-1.0.jar"
+echo "后端JAR: $DEPLOY_DIR/backend/backend-1.0.jar"
 echo ""
 echo "接下来可以使用 deploy.sh 脚本部署到云服务器"
 

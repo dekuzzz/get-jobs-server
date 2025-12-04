@@ -1,4 +1,26 @@
 services:
+  # PostgreSQL 数据库服务
+  postgres:
+    image: postgres:13
+    container_name: getjob-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: wsad123456
+      POSTGRES_DB: postgres
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - getjob-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # 后端服务
   backend:
     build:
@@ -6,13 +28,22 @@ services:
       dockerfile: Dockerfile.backend
     container_name: getjob-backend
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://47.96.178.102:5432/postgres?user=postgres&password=wsad123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres?user=postgres&password=wsad123456
+      DB_URL: jdbc:postgresql://postgres:5432/postgres
       DB_USERNAME: postgres
       DB_PASSWORD: wsad123456
       TZ: Asia/Shanghai
       JAVA_OPTS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+      # 邮件配置
+      MAIL_HOST: ${MAIL_HOST:-smtp.qq.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     ports:
       - "8080:8080"
     volumes:
@@ -23,3 +54,6 @@ services:
 networks:
   getjob-network:
     driver: bridge
+
+volumes:
+  postgres_data:

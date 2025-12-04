@@ -21,6 +21,8 @@ public class UserAccountEntity {
 
     private String salt;
 
+    private String role; // job_seeker | recruiters
+
     private Boolean isActive;
 
     private Instant lastLoginAt;

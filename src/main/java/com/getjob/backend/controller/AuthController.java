@@ -47,6 +47,34 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<AuthDTO.RegisterResponse> register(@RequestBody AuthDTO.RegisterRequest request) {
         try {
+            // 参数验证
+            if (request == null) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "请求体不能为空");
+            }
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "邮箱不能为空");
+            }
+            if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "密码不能为空");
+            }
+            if (request.getUserType() == null || request.getUserType().trim().isEmpty()) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "用户类型不能为空");
+            }
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "姓名不能为空");
+            }
+            if (request.getVerificationToken() == null || request.getVerificationToken().trim().isEmpty()) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "验证token不能为空");
+            }
+            if (!"job_seeker".equalsIgnoreCase(request.getUserType()) && 
+                !"recruiters".equalsIgnoreCase(request.getUserType())) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "用户类型必须是 job_seeker 或 recruiters");
+            }
+            if ("recruiters".equalsIgnoreCase(request.getUserType()) && 
+                (request.getTitle() == null || request.getTitle().trim().isEmpty())) {
+                return ApiResponse.error(ResultCode.BAD_REQUEST.getCode(), "招聘者必须提供职位信息");
+            }
+            
             AuthDTO.RegisterResponse response = authService.register(request);
             return ApiResponse.success("注册成功", response);
         } catch (Exception e) {

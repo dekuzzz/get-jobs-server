@@ -2,8 +2,6 @@ package com.getjob.backend.dto;
 
 import lombok.Data;
 
-import java.util.List;
-
 public class AuthDTO {
 
     @Data
@@ -50,6 +48,7 @@ public class AuthDTO {
         private String email;
         private String userType;
         private String name;
+        private String role; // job_seeker | recruiters
     }
 
     @Data
@@ -64,6 +63,7 @@ public class AuthDTO {
         private String email;
         private String userType;
         private String name;
+        private String role; // job_seeker | recruiters
     }
 
     @Data
@@ -86,6 +86,25 @@ public class AuthDTO {
         private String refreshToken;
         private String tokenType;
         private Integer expiresIn;
+    }
+
+    @Data
+    public static class UserProfileResponse {
+        private Long userId;
+        private String email;
+        private String role; // job_seeker | recruiters
+    }
+
+    @Data
+    public static class SwitchRoleRequest {
+        private String targetRole; // job_seeker | recruiters
+    }
+
+    @Data
+    public static class SwitchRoleResponse {
+        private Long userId;
+        private String email;
+        private String role; // job_seeker | recruiters
     }
 }
 
